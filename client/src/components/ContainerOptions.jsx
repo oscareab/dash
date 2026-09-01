@@ -6,7 +6,7 @@ function ContainerOptions({ container, getStatus }) {
     const [loading, setLoading] = useState(false);
     async function start(name) {
         setLoading(true)
-        const response = await axios.get(`http://100.78.61.106:8000/start/${name}`)
+        const response = await axios.post(`http://100.78.61.106:8000/start/${name}`)
         if (response.data.status == 0) {
             getStatus()
         }
@@ -15,7 +15,7 @@ function ContainerOptions({ container, getStatus }) {
 
     async function stop(name) {
         setLoading(true)
-        const response = await axios.get(`http://100.78.61.106:8000/stop/${name}`)
+        const response = await axios.post(`http://100.78.61.106:8000/stop/${name}`)
         if (response.data.status == 0) {
             getStatus()
         }
@@ -24,7 +24,7 @@ function ContainerOptions({ container, getStatus }) {
 
     async function restart(name) {
         setLoading(true)
-        const response = await axios.get(`http://100.78.61.106:8000/restart/${name}`)
+        const response = await axios.post(`http://100.78.61.106:8000/restart/${name}`)
         if (response.data.status == 0) {
             getStatus()
         }

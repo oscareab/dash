@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import asyncio
 
 from cpu import CPUInfo
@@ -11,14 +11,12 @@ from docker_manager import DockerManager
 
 app = FastAPI()
 
-origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,
 )
 
 cpuInfo = CPUInfo()
@@ -58,21 +56,21 @@ async def root():
 async def root():
     return dockerManager.getContainers()
 
-@app.get('/start/{name}')
+@app.post('/start/{name}')
 async def root(name: str):
     status = dockerManager.start_container(name)
     return {
         "status": status
     }
 
-@app.get('/stop/{name}')
+@app.post('/stop/{name}')
 async def root(name: str):
     status = dockerManager.stop_container(name)
     return {
         "status": status
     }
 
-@app.get('/restart/{name}')
+@app.post('/restart/{name}')
 async def root(name: str):
     status = dockerManager.restart_container(name)
     return {

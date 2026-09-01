@@ -8,7 +8,8 @@ function App() {
   const [lastReceived, setLastReceived] = useState(null)
 
   useEffect(() => {
-    const socket = new WebSocket("ws://100.78.61.106:8000/ws")
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws`)
 
     socket.onmessage = (event) => {
       // console.log(event.data)
@@ -22,13 +23,13 @@ function App() {
   }, [])
 
   return (
-    lastReceived ? 
-    <div className='flex flex-col gap-2 p-8 md:max-w-2/3 md:mx-auto'>
-      <h1>LUDOVICO</h1>
-      <DashBoard dashData={lastReceived} />
-      <DockerDash />
-    </div>
-     : <LoadingState />
+    lastReceived ?
+      <div className='flex flex-col gap-2 p-8 md:max-w-2/3 md:mx-auto'>
+        <h1>LUDOVICO</h1>
+        <DashBoard dashData={lastReceived} />
+        <DockerDash />
+      </div>
+      : <LoadingState />
   )
 
 }

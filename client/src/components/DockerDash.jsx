@@ -8,7 +8,7 @@ function DockerDash() {
 
     async function getStatus() {
         setContainers(null)
-        const response = await axios.get("http://100.78.61.106:8000/docker-status");
+        const response = await axios.get("/docker-status");
         setContainers(response.data);
     }
 
