@@ -1,8 +1,10 @@
 # Simple Linux Dashboard
 I needed a lightweight web dashboard for my Ubuntu server so I could manager my Docker containers, as well as monitor CPU, RAM, and storage usage. Other options were too resource intensive or too bloated, so I built this.
 
+![Dashboard thumbnail](dashboard.png)
+
 ## Features
-Monitor CPU / RAM / Storage thanks to [psutil](https://psutil.readthedocs.io/stable/).  
+Monitor CPU / RAM / Storage with [psutil](https://psutil.readthedocs.io/stable/).  
 Manager Docker containers with [Docker SDK for Python](https://docker-py.readthedocs.io/en/stable/).  
 Protect dashboard with built-in user authentication.
 
