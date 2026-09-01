@@ -1,37 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-import DashBoard from './components/Dashboard'
-import LoadingState from './components/LoadingState'
-import DockerDash from './components/DockerDash'
+import Dashboard from './components/Dashboard';
+import Login from './components/Login';
 
 function App() {
-  const [lastReceived, setLastReceived] = useState(null)
+  const [authenticated, setAuthenticated] = useState(null);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-    const socket = new WebSocket(`${protocol}//${window.location.host}/ws`)
+    axios
+      .get('/hello')
+      .then(() => {
+        setAuthenticated(true);
+      })
+      .catch(() => {
+        setAuthenticated(false);
+      });
+  }, []);
 
-    socket.onmessage = (event) => {
-      // console.log(event.data)
-      let obj = JSON.parse(event.data)
-      setLastReceived(obj)
-    }
+  if (authenticated === null) {
+    return <div>Loading...</div>;
+  }
 
-    return () => {
-      socket.close()
-    }
-  }, [])
+  if (authenticated) {
+    return <Dashboard onLogout={() => setAuthenticated(false)}/>;
+  }
 
-  return (
-    lastReceived ?
-      <div className='flex flex-col gap-2 p-8 md:max-w-2/3 md:mx-auto'>
-        <h1>LUDOVICO</h1>
-        <DashBoard dashData={lastReceived} />
-        <DockerDash />
-      </div>
-      : <LoadingState />
-  )
-
+  return <Login onLogin={() => setAuthenticated(true)} />;
 }
 
-export default App
+export default App;
