@@ -1,5 +1,6 @@
 __pycache__
 dash.log
+server.log
 start.sh
 stop.sh
 .venv
