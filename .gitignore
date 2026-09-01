@@ -3,3 +3,6 @@ dash.log
 start.sh
 stop.sh
 .venv
+users.json
+.env
+.gitignore

@@ -9,82 +9,86 @@ from fastapi import (
     Depends,
     HTTPException,
 )
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import asyncio
 import secrets
 import socket
+import json
+import bcrypt
+import os
+from dotenv import load_dotenv
 
-import sys
-sys.path.append('modules')
+from app.cpu import CPUInfo
+from app.memory import MemoryInfo
+from app.storage import StorageInfo
+from app.docker_manager import DockerManager
 
-from cpu import CPUInfo
-from memory import MemoryInfo
-from storage import StorageInfo
-from docker_manager import DockerManager
+cpu_info = CPUInfo()
+memory_info = MemoryInfo()
+storage_info = StorageInfo()
+docker_manager = DockerManager()
 
-cpuInfo = CPUInfo()
-memoryInfo = MemoryInfo()
-storageInfo = StorageInfo()
-dockerManager = DockerManager()
+with open("users.json", "r") as f:
+    users = json.load(f)["users"]
 
-USERNAME = 'oscar'
-PASSWORD ='password'
+load_dotenv()
+
+SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"
 
 sessions = {}
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_credentials=False,
-)
-
 def update():
-    cpuInfo.update()
-    memoryInfo.update()
-    storageInfo.update()
+    cpu_info.update()
+    memory_info.update()
+    storage_info.update()
 
 def create_json():
     update()
     return {
         "cpu": {
-            "percent": f"{cpuInfo.getUsage()}",
-            "current": f"{cpuInfo.getCurrentFrequency()}",
-            "min": f"{cpuInfo.getMinFrequency()}",
-            "max": f"{cpuInfo.getMaxFrequency()}"
+            "percent": f"{cpu_info.getUsage()}",
+            "current": f"{cpu_info.getCurrentFrequency()}",
+            "min": f"{cpu_info.getMinFrequency()}",
+            "max": f"{cpu_info.getMaxFrequency()}"
         },
         "memory": {
-            "used": f"{memoryInfo.getUsedRam()}",
-            "max": f"{memoryInfo.getTotalRam()}",
-            "percent": f"{memoryInfo.getUsedPercent()}"
+            "used": f"{memory_info.getUsedRam()}",
+            "max": f"{memory_info.getTotalRam()}",
+            "percent": f"{memory_info.getUsedPercent()}"
         },
         "storage": {
-            "partitions": storageInfo.partitions
+            "partitions": storage_info.partitions
         }
     }
+
+def validate_session(session_id):
+    if not session_id:
+        return None
+
+    username = sessions.get(session_id)
+
+    if username not in users:
+        sessions.pop(session_id, None)
+        return None
+
+    return username
+
 
 def get_current_user(
     session: str | None = Cookie(default=None),
 ):
-    if not session:
+    username = validate_session(session)
+
+    if username is None:
         raise HTTPException(
             status_code=401,
             detail="Not authenticated",
         )
 
-    username = sessions.get(session)
-
-    if username is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid session",
-        )
-
     return username
+
 
 @app.post("/login")
 async def login(
@@ -92,19 +96,15 @@ async def login(
     username: str = Form(...),
     password: str = Form(...),
 ):
-    username_ok = secrets.compare_digest(username, USERNAME)
-    password_ok = secrets.compare_digest(password, PASSWORD)
+    user = users.get(username)
 
-    if not (username_ok and password_ok):
+    if user is None or not bcrypt.checkpw(
+        password.encode("utf-8"),
+        user["password_hash"].encode("utf-8"),
+    ):
         raise HTTPException(
             status_code=401,
             detail="Invalid username or password",
-        )
-
-    if username in sessions:
-        raise HTTPException(
-            status_code=409,
-            detail="User is already logged in",
         )
 
     session_id = secrets.token_urlsafe(32)
@@ -115,11 +115,13 @@ async def login(
         key="session",
         value=session_id,
         httponly=True,
-        secure=False,
+        secure=SECURE_COOKIES,
         samesite="strict",
     )
 
     return {"message": "Logged in"}
+
+
 
 @app.post("/logout")
 async def logout(
@@ -132,54 +134,54 @@ async def logout(
     response.delete_cookie(
         key="session",
         httponly=True,
-        secure=False,
+        secure=SECURE_COOKIES,
         samesite="strict",
     )
 
     return {"message": "Logged out"}
 
 @app.get('/hello')
-async def root(
+async def say_hello(
     username: str = Depends(get_current_user),
 ):
     return {"message": "Server is up!"}
 
 @app.get('/name')
-async def root():
+async def get_name():
     return {"name": f"{socket.gethostname()}"}
 
 @app.get('/docker-status')
-async def root(
+async def get_docker_status(
     username: str = Depends(get_current_user),
 ):
-    return dockerManager.getContainers()
+    return docker_manager.getContainers()
 
 @app.post('/start/{name}')
-async def root(
+async def start_container(
     name: str,
     username: str = Depends(get_current_user),
 ):
-    status = dockerManager.start_container(name)
+    status = docker_manager.start_container(name)
     return {
         "status": status
     }
 
 @app.post('/stop/{name}')
-async def root(
+async def stop_container(
     name: str, 
     username: str = Depends(get_current_user),
 ):
-    status = dockerManager.stop_container(name)
+    status = docker_manager.stop_container(name)
     return {
         "status": status
     }
 
 @app.post('/restart/{name}')
-async def root(
+async def restart_container(
     name: str,
     username: str = Depends(get_current_user),
 ):
-    status = dockerManager.restart_container(name)
+    status = docker_manager.restart_container(name)
     return {
         "status": status
     }
@@ -188,13 +190,7 @@ async def root(
 async def websocket_endpoint(websocket: WebSocket):
     session_id = websocket.cookies.get("session")
 
-    if not session_id:
-        await websocket.close(code=1008)
-        return
-
-    username = sessions.get(session_id)
-
-    if username is None:
+    if validate_session(session_id) is None:
         await websocket.close(code=1008)
         return
 
