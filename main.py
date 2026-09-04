@@ -34,6 +34,7 @@ with open("users.json", "r") as f:
 load_dotenv()
 
 SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"
+AUTH_ENABLED = os.getenv("AUTH_ENABLED", "true").lower() == "true"
 
 sessions = {}
 
@@ -79,6 +80,9 @@ def validate_session(session_id):
 def get_current_user(
     session: str | None = Cookie(default=None),
 ):
+    if not AUTH_ENABLED:
+        return "admin"
+
     username = validate_session(session)
 
     if username is None:
@@ -188,11 +192,12 @@ async def restart_container(
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    session_id = websocket.cookies.get("session")
+    if AUTH_ENABLED:
+        session_id = websocket.cookies.get("session")
 
-    if validate_session(session_id) is None:
-        await websocket.close(code=1008)
-        return
+        if validate_session(session_id) is None:
+            await websocket.close(code=1008)
+            return
 
     await websocket.accept()
 
