@@ -1,20 +1,9 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-function Login({ onLogin }) {
+function Login({ onLogin, serverName }) {
     const [username, setUsername] = useState(null);
     const [password, setPassword] = useState(null);
     const [error, setError] = useState(null)
-
-    const [serverName, setServerName] = useState(null)
-
-    useEffect(() => {
-        const fetchServerName = async () => {
-            const response = await axios.get('/name');
-            setServerName(response.data.name);
-        };
-
-        fetchServerName();
-    }, [])
 
     const handleUsername = (event) => {
         setUsername(event.target.value)
@@ -43,7 +32,6 @@ function Login({ onLogin }) {
 
         onLogin()
     }
-
 
     return (
         <div className="h-screen md:max-w-1/3 mx-auto flex justify-center items-center">

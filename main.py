@@ -145,14 +145,21 @@ async def logout(
     return {"message": "Logged out"}
 
 @app.get('/hello')
-async def say_hello(
-    username: str = Depends(get_current_user),
-):
+async def say_hello():
     return {"message": "Server is up!"}
 
-@app.get('/name')
+@app.get('/config')
 async def get_name():
-    return {"name": f"{socket.gethostname()}"}
+    return {
+        "name": f"{socket.gethostname()}",
+        "authEnabled": f"{AUTH_ENABLED}"
+    }
+
+@app.get('check-auth')
+async def check_auth(
+    username: str = Depends(get_current_user),
+):
+    return {"message": "User authenticated"}
 
 @app.get('/docker-status')
 async def get_docker_status(

@@ -4,6 +4,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 function ContainerOptions({ container, getStatus }) {
     const [loading, setLoading] = useState(false);
+    
     async function start(name) {
         setLoading(true)
         const response = await axios.post(`/start/${name}`)
