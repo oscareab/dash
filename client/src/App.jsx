@@ -15,7 +15,7 @@ function App() {
         const response = await axios.get('/config');
 
         const name = response.data.name;
-        const auth = response.data.authEnabled;
+        const auth = response.data.authEnabled == "True" ? true : false;
 
         setServerName(name);
         setAuthEnabled(auth);
