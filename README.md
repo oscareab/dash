@@ -5,8 +5,9 @@ I needed a lightweight web dashboard for my Ubuntu server so I could manager my 
 
 ## Features
 Monitor CPU / RAM / Storage with [psutil](https://psutil.readthedocs.io/stable/).  
-Manager Docker containers with [Docker SDK for Python](https://docker-py.readthedocs.io/en/stable/).  
-Protect dashboard with built-in user authentication.
+Manage Docker containers with [Docker SDK for Python](https://docker-py.readthedocs.io/en/stable/).  
+Manage PM2 processes with [PM2 Python Library](https://pypi.org/project/pm2/)
+Protect dashboard with built-in user authentication (optional).
 
 ## Tech
 FastAPI back end, React + Tailwindcss front end.
@@ -20,6 +21,14 @@ All users are stored in a file called `users.json`. The file `example.users.json
 
 ### Environment variables
 Only one environment variable is used in this dashboard. Session cookies are configured to not be secure by default. If you are serving the dashboard over `https` and would like to use secure cookies, rename `example.env` to `.env` and update `SECURE_COOKIES=false` to `SECURE_COOKIES=true`.
+
+### NPM
+Run the following commands to build the client and install node modules
+```
+cd client
+npm install
+npm run build
+```
 
 ## Starting the server
 On my machine, I use a bash script to activate the virtual environment, start the server, store logs in a file, and store the PID in another. 
