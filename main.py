@@ -22,11 +22,13 @@ from app.cpu import CPUInfo
 from app.memory import MemoryInfo
 from app.storage import StorageInfo
 from app.docker_manager import DockerManager
+from app.my_pm2_manager import MyPM2Manager
 
 cpu_info = CPUInfo()
 memory_info = MemoryInfo()
 storage_info = StorageInfo()
 docker_manager = DockerManager()
+pm2_manager = MyPM2Manager()
 
 with open("users.json", "r") as f:
     users = json.load(f)["users"]
@@ -167,7 +169,7 @@ async def get_docker_status(
 ):
     return docker_manager.getContainers()
 
-@app.post('/start/{name}')
+@app.post('/start-container/{name}')
 async def start_container(
     name: str,
     username: str = Depends(get_current_user),
@@ -177,7 +179,7 @@ async def start_container(
         "status": status
     }
 
-@app.post('/stop/{name}')
+@app.post('/stop-container/{name}')
 async def stop_container(
     name: str, 
     username: str = Depends(get_current_user),
@@ -187,12 +189,38 @@ async def stop_container(
         "status": status
     }
 
-@app.post('/restart/{name}')
+@app.post('/restart-container/{name}')
 async def restart_container(
     name: str,
     username: str = Depends(get_current_user),
 ):
     status = docker_manager.restart_container(name)
+    return {
+        "status": status
+    }
+
+@app.get('/pm2-status')
+async def get_pm2_status(
+    username: str = Depends(get_current_user),
+):
+    return pm2_manager.get_processes()
+
+@app.post('/start-pm2/{name}')
+async def start_pm2(
+    name: str,
+    username: str = Depends(get_current_user),
+):
+    status = pm2_manager.start_process(name)
+    return {
+        "status": status
+    }
+
+@app.post('/stop-pm2/{name}')
+async def stop_pm2(
+    name: str,
+    username: str = Depends(get_current_user),
+):
+    status = pm2_manager.stop_process(name)
     return {
         "status": status
     }

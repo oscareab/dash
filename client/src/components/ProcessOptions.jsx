@@ -2,12 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-function ContainerOptions({ container, getStatus }) {
+function ProcessOptions({ process, getStatus }) {
     const [loading, setLoading] = useState(false);
     
     async function start(name) {
         setLoading(true)
-        const response = await axios.post(`/start-container/${name}`)
+        const response = await axios.post(`/start-pm2/${name}`)
         if (response.data.status == 0) {
             getStatus()
         }
@@ -16,49 +16,38 @@ function ContainerOptions({ container, getStatus }) {
 
     async function stop(name) {
         setLoading(true)
-        const response = await axios.post(`/stop-container/${name}`)
+        const response = await axios.post(`/stop-pm2/${name}`)
         if (response.data.status == 0) {
             getStatus()
         }
         setLoading(false)
     }
 
-    async function restart(name) {
-        setLoading(true)
-        const response = await axios.post(`/restart-container/${name}`)
-        if (response.data.status == 0) {
-            getStatus()
-        }
-        setLoading(false)
-    }
     return (
         <div>
             <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                    {container.name}
-                    <span className="ml-2 text-sm font-normal text-gray-400">
-                        ({container.short_id})
-                    </span>
+                    {process.name}
                 </h2>
 
                 <p className="text-sm text-gray-600">
                     Status:{" "}
                     <span
                         className={
-                            container.status === "running"
+                            process.status === "ProcessStatus.ONLINE"
                                 ? "font-medium text-green-600"
                                 : "font-medium text-gray-500"
                         }
                     >
-                        {container.status}
+                        {process.status == "ProcessStatus.ONLINE" ? "online" : "offline"}
                     </span>
                 </p>
             </div>
 
             <div className="flex items-center gap-2">
                 <button
-                    disabled={container.status === "running" || loading}
-                    onClick={() => start(container.name)}
+                    disabled={process.status === "ProcessStatus.ONLINE" || loading}
+                    onClick={() => start(process.name)}
                     className="bg-green-600 hover:bg-green-700"
                     title="Start"
                 >
@@ -66,21 +55,12 @@ function ContainerOptions({ container, getStatus }) {
                 </button>
 
                 <button
-                    disabled={container.status === "exited" || loading}
-                    onClick={() => stop(container.name)}
+                    disabled={process.status === "ProcessStatus.STOPPED" || loading}
+                    onClick={() => stop(process.name)}
                     className="bg-red-600 hover:bg-red-700"
                     title="Stop"
                 >
                     <i className="bi bi-stop-fill" />
-                </button>
-
-                <button
-                    disabled={container.status === "exited" || loading}
-                    onClick={() => restart(container.name)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    title="Restart"
-                >
-                    <i className="bi bi-arrow-clockwise" />
                 </button>
 
                 {loading && (
@@ -92,4 +72,4 @@ function ContainerOptions({ container, getStatus }) {
     )
 }
 
-export default ContainerOptions;
+export default ProcessOptions;

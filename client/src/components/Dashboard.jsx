@@ -4,18 +4,17 @@ import CPUCard from "./CPUCard"
 import RAMCard from "./RAMCard"
 import StorageCard from "./StorageCard"
 import DockerDash from "./DockerDash"
+import PM2Dash from "./PM2Dash"
 import LoadingState from "./LoadingState"
 
 function DashBoard({onLogout, serverName, authEnabled}) {
   const [dashData, setDashData] = useState(null)
 
   useEffect(() => {
-
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
     const socket = new WebSocket(`${protocol}//${window.location.host}/ws`)
 
     socket.onmessage = (event) => {
-      // console.log(event.data)
       let obj = JSON.parse(event.data)
       setDashData(obj)
     }
@@ -51,6 +50,8 @@ function DashBoard({onLogout, serverName, authEnabled}) {
         </div>
 
         <DockerDash />
+
+        <PM2Dash />
 
       </div>
       : <LoadingState />
